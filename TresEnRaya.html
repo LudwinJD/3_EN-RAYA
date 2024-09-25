@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tres en Raya U</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <style>
+        :root {
+    --primary-color: #4a4e69;
+    --secondary-color: #9a8c98;
+    --accent-color: #c9ada7;
+    --background-color: #f2e9e4;
+    --text-color: #22223b;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--background-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.container {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    max-width: 800px;
+    width: 90%;
+}
+
+h1 {
+    margin-bottom: 1.5rem;
+    font-size: 2.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    color: var(--primary-color);
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-gap: 10px;
+    margin: 2rem auto;
+    perspective: 1000px;
+    position: relative;
+    left: 240px;
+}
+
+.cell {
+    width: 100px;
+    height: 100px;
+    background-color: var(--secondary-color);
+    border: 2px solid var(--primary-color);
+    border-radius: 10px;
+    font-size: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
+}
+
+.cell:hover {
+    background-color: var(--accent-color);
+    transform: scale(1.05) rotateY(10deg);
+}
+
+.options,
+.game-options {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+#message {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    min-height: 2rem;
+    color: var(--primary-color);
+}
+
+#scoreboard {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+}
+
+.score {
+    background-color: var(--secondary-color);
+    padding: 10px;
+    border-radius: 5px;
+    color: #fff;
+}
+
+#timer {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+#difficulty {
+    margin-bottom: 1rem;
+}
+
+#theme-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dark-mode {
+    --primary-color: #bb86fc;
+    --secondary-color: #3700b3;
+    --accent-color: #03dac6;
+    --background-color: #121212;
+    --text-color: #ffffff;
+}
+
+#game-history {
+    margin-top: 2rem;
+    text-align: left;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+#achievements {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.achievement {
+    margin: 10px;
+    padding: 10px;
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+    color: #fff;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.achievement.unlocked {
+    opacity: 1;
+    transform: scale(1.1);
+}
+    </style>
+</head>
+
+<body>
+    <button id="theme-toggle">🌓</button>
+    <div class="container">
+        <h1>Tres en Raya U</h1>
+        <div class="options">
+            <button id="playHuman">Jugar contra Humano</button>
+            <button id="playAI">Jugar contra IA</button>
+        </div>
+        <div class="game-options">
+            <button id="undoMove">Deshacer Jugada</button>
+            <button id="toggleSound">Sonido: On</button>
+        </div>
+        <div id="difficulty">
+            <label for="aiDifficulty">Dificultad IA:</label>
+            <select id="aiDifficulty">
+                <option value="easy">Fácil</option>
+                <option value="medium">Medio</option>
+                <option value="hard">Difícil</option>
+            </select>
+        </div>
+        <div id="timer">Tiempo: 00:00</div>
+        <div id="scoreboard">
+            <div class="score">Jugador X: <span id="scoreX">0</span></div>
+            <div class="score">Jugador O: <span id="scoreO">0</span></div>
+        </div>
+        <div id="message"></div>
+        <div class="board" id="board"></div>
+        <button id="restart">Reiniciar Juego</button>
+        <div id="game-history">
+            <h3>Historial de Partidas</h3>
+            <ul id="history-list"></ul>
+        </div>
+        <div id="achievements">
+            <div class="achievement" id="achievement-first-win">Primera Victoria</div>
+            <div class="achievement" id="achievement-five-wins">5 Victorias</div>
+            <div class="achievement" id="achievement-no-lose">Victoria sin Perder</div>
+        </div>
+    </div>
+
+    <script>
+        // estado inicial del tablero vacio
+        const S0 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const board = document.getElementById('board');
+        const message = document.getElementById('message');
+        const playHumanBtn = document.getElementById('playHuman');
+        const playAIBtn = document.getElementById('playAI');
+        const restartBtn = document.getElementById('restart');
+        const scoreX = document.getElementById('scoreX');
+        const scoreO = document.getElementById('scoreO');
+        const timerElement = document.getElementById('timer');
+        const undoMoveBtn = document.getElementById('undoMove');
+        const toggleSoundBtn = document.getElementById('toggleSound');
+        const aiDifficultySelect = document.getElementById('aiDifficulty');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const historyList = document.getElementById('history-list');
+
+        let currentState = [...S0];
+        let gameMode = '';
+        let gameActive = false;
+        let scores = { X: 0, O: 0 };
+        let timer;
+        let seconds = 0;
+        let moveHistory = [];
+        let soundOn = true;
+        let aiDifficulty = 'medium';
+
+        // sonidos del juego
+        const sounds = {
+            move: new Howl({ src: ['/audios/move.mp3'] }),
+            win: new Howl({ src: ['/audios/win.mp3'] }),
+            draw: new Howl({ src: ['/audios/draw.mp3'] })
+        };
+
+        // determina el jugador actual
+        function PLAYER(s) {
+            const emptySpaces = s.filter(cell => cell === 0).length;
+            return emptySpaces % 2 === 0 ? 2 : 1;
+            console.log(emptySpaces);
+        }
+
+        // obtiene las acciones posibles
+        function ACTIONS(s) {
+            return s.reduce((acc, cell, index) => {
+                if (cell === 0) acc.push(index);
+                return acc;
+            }, []);
+            console.log(acc);
+        }
+
+        // aplica una accion al estado actual
+        function RESULT(s, a) {
+            const newState = [...s];
+            newState[a] = PLAYER(s);
+            return newState;
+            console.log(newState);
+        }
+
+        // verifica si el juego ha terminado
+        function TERMINAL(s) {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (let pattern of winPatterns) {
+                if (s[pattern[0]] !== 0 &&
+                    s[pattern[0]] === s[pattern[1]] &&
+                    s[pattern[1]] === s[pattern[2]]) {
+                    return true;
+                }
+            }
+
+            return !s.includes(0);
+            console.log(winPatterns);
+            console.log(!s.includes(0));
+        }
+
+        // calcula la utilidad del estado actual
+        function UTILITY(s) {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (let pattern of winPatterns) {
+                if (s[pattern[0]] !== 0 &&
+                    s[pattern[0]] === s[pattern[1]] &&
+                    s[pattern[1]] === s[pattern[2]]) {
+                    return s[pattern[0]] === 1 ? 1 : -1;
+                }
+            }
+
+            return 0;
+            console.log(winPatterns);
+        }
+
+        // algoritmo minimax con poda alfa beta
+        function minimax(s, depth, alpha, beta, maximizingPlayer) {
+            if (depth === 0 || TERMINAL(s)) {
+                return UTILITY(s);
+            }
+
+            if (maximizingPlayer) {
+                let maxEval = -Infinity;
+                for (let a of ACTIONS(s)) {
+                    const eval = minimax(RESULT(s, a), depth - 1, alpha, beta, false);
+                    maxEval = Math.max(maxEval, eval);
+                    alpha = Math.max(alpha, eval);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (let a of ACTIONS(s)) {
+                    const eval = minimax(RESULT(s, a), depth - 1, alpha, beta, true);
+                    minEval = Math.min(minEval, eval);
+                    beta = Math.min(beta, eval);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        // obtiene el mejor movimiento para la ia
+        function getBestMove(s) {
+            const player = PLAYER(s);
+            const actions = ACTIONS(s);
+            let bestAction;
+            let bestValue = player === 1 ? -Infinity : Infinity;
+
+            let depth;
+            switch (aiDifficulty) {
+                case 'easy':
+                    depth = 1;
+                    break;
+                case 'medium':
+                    depth = 3;
+                    break;
+                case 'hard':
+                    depth = 5;
+                    break;
+            }
+
+            for (let a of actions) {
+                const value = minimax(RESULT(s, a), depth, -Infinity, Infinity, player === 2);
+                if ((player === 1 && value > bestValue) || (player === 2 && value < bestValue)) {
+                    bestValue = value;
+                    bestAction = a;
+                }
+            }
+
+            return bestAction;
+        }
+
+        // crea el tablero de juego
+        function createBoard() {
+            board.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.index = i;
+                cell.addEventListener('click', handleCellClick);
+                board.appendChild(cell);
+            }
+        }
+
+        // actualiza el tablero con el estado actual
+        function updateBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = currentState[index] === 1 ? 'X' : currentState[index] === 2 ? 'O' : '';
+            });
+        }
+
+        // maneja el clic en una celda
+        function handleCellClick(e) {
+            if (!gameActive) return;
+            const index = parseInt(e.target.dataset.index);
+            if (currentState[index] !== 0) return;
+
+            makeMove(index);
+
+            if (gameMode === 'AI' && !TERMINAL(currentState)) {
+                setTimeout(() => {
+                    const aiMove = getBestMove(currentState);
+                    makeMove(aiMove);
+                }, 500);
+            }
+        }
+
+        // realiza un movimiento
+        function makeMove(index) {
+            moveHistory.push([...currentState]);
+            currentState = RESULT(currentState, index);
+            updateBoard();
+            animateMove(index);
+            playSound('move');
+
+            if (TERMINAL(currentState)) {
+                endGame();
+            }
+        }
+
+        // finaliza el juego
+        function endGame() {
+            gameActive = false;
+            clearInterval(timer);
+            const winner = UTILITY(currentState);
+            if (winner === 0) {
+                message.textContent = "¡Empate!";
+                playSound('draw');
+            } else {
+                const winningPlayer = winner === 1 ? 'X' : 'O';
+                message.textContent = `¡Gana ${winningPlayer}!`;
+                scores[winningPlayer]++;
+                updateScoreboard();
+                celebrateWin();
+                playSound('win');
+                checkAchievements(winningPlayer);
+            }
+            restartBtn.style.display = 'inline-block';
+            addToGameHistory(winner);
+        }
+
+        // anima el movimiento en el tablero
+        function animateMove(index) {
+            const cell = document.querySelector(`.cell[data-index="${index}"]`);
+            anime({
+                targets: cell,
+                scale: [1, 1.2, 1],
+                rotateY: [0, 360],
+                duration: 500,
+                easing: 'easeInOutQuad'
+            });
+        }
+
+        // celebra la victoria con confeti
+        function celebrateWin() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // actualiza el marcador
+        function updateScoreboard() {
+            scoreX.textContent = scores.X;
+            scoreO.textContent = scores.O;
+            anime({
+                targets: [scoreX, scoreO],
+                scale: [1, 1.2, 1],
+                duration: 300,
+                easing: 'easeInOutQuad'
+            });
+        }
+
+        // inicia el temporizador
+        function startTimer() {
+            seconds = 0;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                timerElement.textContent = `Tiempo: ${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // deshace el ultimo movimiento
+        function undoLastMove() {
+            if (moveHistory.length > 0) {
+                currentState = moveHistory.pop();
+                updateBoard();
+                gameActive = true;
+                message.textContent = '';
+            }
+        }
+
+        // activa o desactiva el sonido
+        function toggleSound() {
+            soundOn = !soundOn;
+            toggleSoundBtn.textContent = `Sonido: ${soundOn ? 'On' : 'Off'}`;
+        }
+
+        // reproduce un sonido
+        function playSound(soundName) {
+            if (soundOn) {
+                sounds[soundName].play();
+            }
+        }
+
+        // anade una partida al historial
+        function addToGameHistory(result) {
+            const historyItem = document.createElement('li');
+            const resultText = result === 0 ? 'Empate' : `Ganador: ${result === 1 ? 'X' : 'O'}`;
+            historyItem.textContent = `${new Date().toLocaleTimeString()} - ${resultText}`;
+            historyList.prepend(historyItem);
+
+            if (historyList.children.length > 5) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+
+        // verifica los logros del jugador
+        function checkAchievements(winner) {
+            const achievements = {
+                'achievement-first-win': scores[winner] === 1,
+                'achievement-five-wins': scores[winner] === 5,
+                'achievement-no-lose': scores[winner] === 3 && scores[winner === 'X' ? 'O' : 'X'] === 0
+            };
+
+            for (const [id, condition] of Object.entries(achievements)) {
+                if (condition) {
+                    const achievement = document.getElementById(id);
+                    achievement.classList.add('unlocked');
+                    anime({
+                        targets: achievement,
+                        scale: [1, 1.2, 1],
+                        rotate: 360,
+                        duration: 1000,
+                        easing: 'easeInOutQuad'
+                    });
+                }
+            }
+        }
+
+        // cambia entre modo claro y oscuro
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            themeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌓';
+        }
+
+        // event listeners para los botones
+        playHumanBtn.addEventListener('click', () => startGame('Human'));
+        playAIBtn.addEventListener('click', () => startGame('AI'));
+        restartBtn.addEventListener('click', () => startGame(gameMode));
+        undoMoveBtn.addEventListener('click', undoLastMove);
+        toggleSoundBtn.addEventListener('click', toggleSound);
+        aiDifficultySelect.addEventListener('change', (e) => {
+            aiDifficulty = e.target.value;
+        });
+        themeToggleBtn.addEventListener('click', toggleTheme);
+
+        function startGame(mode) {
+            gameMode = mode;
+            currentState = [...S0];
+            gameActive = true;
+            moveHistory = [];
+            message.textContent = gameMode === 'Human' ? 'Juego contra Humano' : 'Juego contra IA';
+            createBoard();
+            updateBoard();
+            restartBtn.style.display = 'none';
+            startTimer();
+        }
+
+        createBoard();
+    </script>
+</body>
+
+</html>
